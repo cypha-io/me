@@ -1,0 +1,16 @@
+{
+  "name": "errand-api",
+  "version": "1.0.0",
+  "description": "Vercel serverless functions for Errand app",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "pusher": "^5.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
