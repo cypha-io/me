@@ -57,6 +57,10 @@ export default async function handler(req, res) {
         return await handleOrderAccepted(req, res, requestData);
       case 'notify-order-status':
         return await handleOrderStatus(req, res, requestData);
+      case 'broadcast-rider-status':
+        return await handleBroadcastRiderStatus(req, res, requestData);
+      case 'notify-new-rider-online':
+        return await handleNotifyNewRiderOnline(req, res, requestData);
       case 'test-notification':
         return await handleTestNotification(req, res, requestData);
       default:
@@ -228,5 +232,85 @@ async function handleTestNotification(req, res, data) {
   } catch (error) {
     console.error('📱 ❌ Error sending test notification:', error);
     return res.status(500).json({ error: 'Failed to send test notification' });
+  }
+}
+
+// Handle broadcast rider status updates
+async function handleBroadcastRiderStatus(req, res, data) {
+  const { riderId, statusData, affectedCustomers } = data;
+  
+  try {
+    console.log(`📱 Broadcasting rider status for ${riderId}:`, statusData);
+    
+    const notification = {
+      type: 'rider-status-update',
+      riderId: riderId,
+      statusData: statusData,
+      timestamp: Date.now()
+    };
+
+    const promises = [];
+    
+    // Broadcast to general rider channel
+    promises.push(pusher.trigger('rider-updates', 'status-change', notification));
+    
+    // If there are affected customers, notify them specifically
+    if (affectedCustomers && affectedCustomers.length > 0) {
+      affectedCustomers.forEach(customerId => {
+        promises.push(pusher.trigger(`customer-${customerId}`, 'rider-status-update', notification));
+      });
+    }
+
+    await Promise.all(promises);
+    
+    return res.json({ 
+      success: true, 
+      message: 'Rider status broadcast sent successfully',
+      riderId: riderId,
+      affectedCustomers: affectedCustomers?.length || 0
+    });
+  } catch (error) {
+    console.error('📱 ❌ Error broadcasting rider status:', error);
+    return res.status(500).json({ error: 'Failed to broadcast rider status' });
+  }
+}
+
+// Handle new rider online notifications
+async function handleNotifyNewRiderOnline(req, res, data) {
+  const { customers, riderData } = data;
+  
+  try {
+    console.log(`📱 Notifying customers about new rider online:`, riderData);
+    
+    const notification = {
+      type: 'new-rider-online',
+      title: 'New Rider Available',
+      message: 'A new delivery person is now available in your area',
+      riderData: riderData,
+      timestamp: Date.now()
+    };
+
+    const promises = [];
+    
+    // Notify each customer in the area
+    if (customers && customers.length > 0) {
+      customers.forEach(customerId => {
+        promises.push(pusher.trigger(`customer-${customerId}`, 'new-rider-online', notification));
+      });
+    }
+    
+    // Also broadcast to general customers channel
+    promises.push(pusher.trigger('customer-updates', 'new-rider-online', notification));
+
+    await Promise.all(promises);
+    
+    return res.json({ 
+      success: true, 
+      message: 'New rider online notification sent successfully',
+      notifiedCustomers: customers?.length || 0
+    });
+  } catch (error) {
+    console.error('📱 ❌ Error notifying new rider online:', error);
+    return res.status(500).json({ error: 'Failed to notify new rider online' });
   }
 }
