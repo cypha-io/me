@@ -63,6 +63,18 @@ export default async function handler(req, res) {
         return await handleNotifyNewRiderOnline(req, res, requestData);
       case 'test-notification':
         return await handleTestNotification(req, res, requestData);
+      case 'order-completed':
+        return await handleOrderCompleted(req, res, requestData);
+      case 'payment-received':
+        return await handlePaymentReceived(req, res, requestData);
+      case 'rating-updated':
+        return await handleRatingUpdated(req, res, requestData);
+      case 'order-created':
+        return await handleOrderCreated(req, res, requestData);
+      case 'order-status-changed':
+        return await handleOrderStatusChanged(req, res, requestData);
+      case 'order-assigned':
+        return await handleOrderAssigned(req, res, requestData);
       default:
         // If no action specified, try to handle as enhanced order notification (backwards compatibility)
         if (requestData.riderIds && requestData.orderData) {
@@ -312,5 +324,177 @@ async function handleNotifyNewRiderOnline(req, res, data) {
   } catch (error) {
     console.error('📱 ❌ Error notifying new rider online:', error);
     return res.status(500).json({ error: 'Failed to notify new rider online' });
+  }
+}
+
+// Handle order completed notifications
+async function handleOrderCompleted(req, res, data) {
+  const { riderId, orderData } = data;
+  
+  try {
+    console.log(`📱 Sending order completed notification to rider ${riderId}`);
+    
+    const notification = {
+      type: 'order-completed',
+      title: 'Order Completed!',
+      message: `You have successfully completed order #${orderData.orderId}`,
+      orderData: orderData,
+      timestamp: Date.now()
+    };
+
+    await pusher.trigger(`rider-${riderId}`, 'order-completed', notification);
+    
+    return res.json({ 
+      success: true, 
+      message: 'Order completed notification sent successfully',
+      riderId: riderId
+    });
+  } catch (error) {
+    console.error('📱 ❌ Error sending order completed notification:', error);
+    return res.status(500).json({ error: 'Failed to send order completed notification' });
+  }
+}
+
+// Handle payment received notifications
+async function handlePaymentReceived(req, res, data) {
+  const { riderId, paymentData } = data;
+  
+  try {
+    console.log(`📱 Sending payment received notification to rider ${riderId}`);
+    
+    const notification = {
+      type: 'payment-received',
+      title: 'Payment Received!',
+      message: `You received $${paymentData.amount} for order #${paymentData.orderId}`,
+      paymentData: paymentData,
+      timestamp: Date.now()
+    };
+
+    await pusher.trigger(`rider-${riderId}`, 'payment-received', notification);
+    
+    return res.json({ 
+      success: true, 
+      message: 'Payment received notification sent successfully',
+      riderId: riderId
+    });
+  } catch (error) {
+    console.error('📱 ❌ Error sending payment received notification:', error);
+    return res.status(500).json({ error: 'Failed to send payment received notification' });
+  }
+}
+
+// Handle rating updated notifications
+async function handleRatingUpdated(req, res, data) {
+  const { riderId, ratingData } = data;
+  
+  try {
+    console.log(`📱 Sending rating updated notification to rider ${riderId}`);
+    
+    const notification = {
+      type: 'rating-updated',
+      title: 'New Rating Received!',
+      message: `You received a ${ratingData.rating}-star rating`,
+      ratingData: ratingData,
+      timestamp: Date.now()
+    };
+
+    await pusher.trigger(`rider-${riderId}`, 'rating-updated', notification);
+    
+    return res.json({ 
+      success: true, 
+      message: 'Rating updated notification sent successfully',
+      riderId: riderId
+    });
+  } catch (error) {
+    console.error('📱 ❌ Error sending rating updated notification:', error);
+    return res.status(500).json({ error: 'Failed to send rating updated notification' });
+  }
+}
+
+// Handle order created notifications
+async function handleOrderCreated(req, res, data) {
+  const { orderData } = data;
+  
+  try {
+    console.log(`📱 Broadcasting new order created: ${orderData.orderId}`);
+    
+    const notification = {
+      type: 'order-created',
+      title: 'New Order Available',
+      message: `New ${orderData.errandType} order in ${orderData.location}`,
+      orderData: orderData,
+      timestamp: Date.now()
+    };
+
+    await pusher.trigger('order-updates', 'order-created', notification);
+    
+    return res.json({ 
+      success: true, 
+      message: 'Order created notification sent successfully',
+      orderId: orderData.orderId
+    });
+  } catch (error) {
+    console.error('📱 ❌ Error sending order created notification:', error);
+    return res.status(500).json({ error: 'Failed to send order created notification' });
+  }
+}
+
+// Handle order status changed notifications
+async function handleOrderStatusChanged(req, res, data) {
+  const { orderData, previousStatus } = data;
+  
+  try {
+    console.log(`📱 Broadcasting order status changed: ${orderData.orderId} from ${previousStatus} to ${orderData.status}`);
+    
+    const notification = {
+      type: 'order-status-changed',
+      title: 'Order Status Updated',
+      message: `Order #${orderData.orderId} status changed to ${orderData.status}`,
+      orderData: orderData,
+      previousStatus: previousStatus,
+      status: orderData.status,
+      timestamp: Date.now()
+    };
+
+    await pusher.trigger('order-updates', 'order-status-changed', notification);
+    
+    return res.json({ 
+      success: true, 
+      message: 'Order status changed notification sent successfully',
+      orderId: orderData.orderId,
+      status: orderData.status
+    });
+  } catch (error) {
+    console.error('📱 ❌ Error sending order status changed notification:', error);
+    return res.status(500).json({ error: 'Failed to send order status changed notification' });
+  }
+}
+
+// Handle order assigned notifications
+async function handleOrderAssigned(req, res, data) {
+  const { orderData } = data;
+  
+  try {
+    console.log(`📱 Broadcasting order assigned: ${orderData.orderId} to rider ${orderData.riderId}`);
+    
+    const notification = {
+      type: 'order-assigned',
+      title: 'Order Assigned',
+      message: `Order #${orderData.orderId} has been assigned`,
+      orderData: orderData,
+      timestamp: Date.now()
+    };
+
+    await pusher.trigger('order-updates', 'order-assigned', notification);
+    
+    return res.json({ 
+      success: true, 
+      message: 'Order assigned notification sent successfully',
+      orderId: orderData.orderId,
+      riderId: orderData.riderId
+    });
+  } catch (error) {
+    console.error('📱 ❌ Error sending order assigned notification:', error);
+    return res.status(500).json({ error: 'Failed to send order assigned notification' });
   }
 }
