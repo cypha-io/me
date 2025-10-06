@@ -211,6 +211,15 @@ async function handleOrderStatus(req, res, data) {
       promises.push(pusher.trigger(`rider-${riderId}`, 'order-status-update', notification));
     }
 
+    // Also send to order-specific channel for searching pages
+    if (orderData.orderId) {
+      promises.push(pusher.trigger(`order-${orderData.orderId}`, 'order-status-update', {
+        ...notification,
+        status: orderData.status,
+        riderId: riderId
+      }));
+    }
+
     await Promise.all(promises);
     
     return res.json({ success: true, message: 'Order status notification sent' });
