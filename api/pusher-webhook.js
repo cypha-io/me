@@ -57,6 +57,10 @@ export default async function handler(req, res) {
         return await handleOrderAccepted(req, res, requestData);
       case 'notify-order-status':
         return await handleOrderStatus(req, res, requestData);
+      case 'order-status-update':
+        return await handleOrderStatusUpdate(req, res, requestData);
+      case 'location-update':
+        return await handleRiderLocationUpdate(req, res, requestData);
       case 'broadcast-rider-status':
         return await handleBroadcastRiderStatus(req, res, requestData);
       case 'notify-new-rider-online':
@@ -505,5 +509,80 @@ async function handleOrderAssigned(req, res, data) {
   } catch (error) {
     console.error('📱 ❌ Error sending order assigned notification:', error);
     return res.status(500).json({ error: 'Failed to send order assigned notification' });
+  }
+}
+
+// Handle order status updates for real-time UI updates
+async function handleOrderStatusUpdate(req, res, data) {
+  const { customerId, riderId, orderData } = data;
+  
+  try {
+    console.log(`📱 Sending order status update for order ${orderData.orderId} to status ${orderData.status}`);
+    
+    const notification = {
+      type: 'order-status-update',
+      title: 'Order Update',
+      message: `Order status updated to ${orderData.status}`,
+      data: orderData,
+      timestamp: Date.now()
+    };
+
+    // Send to order-specific channel for tracking pages
+    if (orderData.orderId) {
+      await pusher.trigger(`order-${orderData.orderId}`, 'order-status-update', notification);
+    }
+
+    // Also send to customer and rider channels if available
+    const promises = [];
+    if (customerId) {
+      promises.push(pusher.trigger(`customer-${customerId}`, 'order-status-update', notification));
+    }
+    if (riderId) {
+      promises.push(pusher.trigger(`rider-${riderId}`, 'order-status-update', notification));
+    }
+
+    await Promise.all(promises);
+    
+    return res.json({ 
+      success: true, 
+      message: 'Order status update sent successfully',
+      orderId: orderData.orderId,
+      status: orderData.status
+    });
+  } catch (error) {
+    console.error('📱 ❌ Error sending order status update:', error);
+    return res.status(500).json({ error: 'Failed to send order status update' });
+  }
+}
+
+// Handle rider location updates for real-time tracking
+async function handleRiderLocationUpdate(req, res, data) {
+  const { orderId, location } = data;
+  
+  try {
+    console.log(`📱 Sending rider location update for order ${orderId}`);
+    
+    const locationData = {
+      type: 'location-update',
+      orderId: orderId,
+      location: location,
+      timestamp: Date.now()
+    };
+
+    // Send to rider channel if we have rider info, or broadcast to order channel
+    // For now, we'll send to order channel since tracking page listens there
+    if (orderId) {
+      await pusher.trigger(`order-${orderId}`, 'location-update', locationData);
+    }
+    
+    return res.json({ 
+      success: true, 
+      message: 'Rider location update sent successfully',
+      orderId: orderId,
+      location: location
+    });
+  } catch (error) {
+    console.error('📱 ❌ Error sending rider location update:', error);
+    return res.status(500).json({ error: 'Failed to send rider location update' });
   }
 }
