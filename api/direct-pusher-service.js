@@ -60,6 +60,8 @@ class DirectPusherService {
         orderId: orderData.id,
         status: newStatus,
         oldStatus: oldStatus,
+        riderId: orderData.riderId,
+        customerId: orderData.customerId,
         timestamp: Date.now()
       });
 
