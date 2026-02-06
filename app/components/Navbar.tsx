@@ -1,16 +1,23 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface NavbarProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const navItems = ["Home", "About", "Projects", "Contact"];
+const navItems = [
+  { label: "Home", href: "/" },
+  { label: "About", href: "/about" },
+  { label: "Projects", href: "/projects" },
+  { label: "Contact", href: "#contact" },
+];
 
 const Navbar = ({ isOpen, onClose }: NavbarProps) => {
-  const [activeItem, setActiveItem] = useState("Home");
+  const pathname = usePathname();
 
   return (
     <div
@@ -20,30 +27,45 @@ const Navbar = ({ isOpen, onClose }: NavbarProps) => {
       onClick={onClose}
     >
       <ul className="text-center" onClick={(e) => e.stopPropagation()}>
-        {navItems.map((item, index) => (
-          <li
-            key={item}
-            className={`transition-all duration-700 ease-in-out ${
-              isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-            }`}
-            style={{ transitionDelay: `${isOpen ? index * 200 : 0}ms` }}
-          >
-            <a
-              href={`#${item.toLowerCase()}`}
-              onClick={() => {
-                setActiveItem(item);
-                onClose();
-              }}
-              className={`text-4xl sm:text-6xl font-extrabold transition-all duration-300 transform hover:scale-110 ${
-                activeItem === item
-                  ? "text-black scale-110"
-                  : "text-white hover:text-black"
+        {navItems.map((item, index) => {
+          const isActive = pathname === item.href;
+          
+          return (
+            <li
+              key={item.label}
+              className={`transition-all duration-700 ease-in-out ${
+                isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
               }`}
+              style={{ transitionDelay: `${isOpen ? index * 200 : 0}ms` }}
             >
-              {item}
-            </a>
-          </li>
-        ))}
+              {item.href.startsWith("/") ? (
+                <Link
+                  href={item.href}
+                  onClick={onClose}
+                  className={`text-4xl sm:text-6xl font-extrabold transition-all duration-300 transform hover:scale-110 block ${
+                    isActive
+                      ? "text-blue-500 scale-110"
+                      : "text-gray-800 hover:text-blue-500"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              ) : (
+                <a
+                  href={item.href}
+                  onClick={onClose}
+                  className={`text-4xl sm:text-6xl font-extrabold transition-all duration-300 transform hover:scale-110 block ${
+                    isActive
+                      ? "text-blue-500 scale-110"
+                      : "text-gray-800 hover:text-blue-500"
+                  }`}
+                >
+                  {item.label}
+                </a>
+              )}
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
