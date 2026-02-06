@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@types/pusher-js": "^4.2.2",
-    "next": "15.5.0",
+    "next": "15.5.1",
     "pusher": "^5.2.0",
     "pusher-js": "^8.4.0",
     "react": "19.1.0",
@@ -24,7 +24,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "15.5.0",
+    "eslint-config-next": "15.5.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
