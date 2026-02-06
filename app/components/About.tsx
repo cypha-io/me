@@ -112,7 +112,7 @@ export default function About() {
 
         {/* Social Links */}
         <div className="text-center">
-          <h3 className="text-3xl font-bold mb-12 text-gray-900">Let's Connect</h3>
+          <h3 className="text-3xl font-bold mb-12 text-gray-900">Let&apos;s Connect</h3>
           <div className="flex justify-center gap-8 flex-wrap">
             <a
               href={profileData.social.github}

@@ -1,6 +1,6 @@
 "use client";
 
-import { FaExternalLinkAlt, FaGithub, FaCode } from "react-icons/fa";
+import { FaExternalLinkAlt, FaGithub } from "react-icons/fa";
 import { profileData } from "@/app/data/profile";
 
 export default function Projects() {
@@ -16,7 +16,7 @@ export default function Projects() {
             Projects
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Innovative solutions and platforms I've built to solve real-world problems
+            Innovative solutions and platforms I&apos;ve built to solve real-world problems
           </p>
         </div>
 
